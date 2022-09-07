@@ -34,7 +34,7 @@ const Feed = mongoose_1.default.model('feed', postSchema);
 app
     .route('/')
     .get((req, res) => {
-    res.send('Express + TypeScript Serverssdsd');
+    res.send('yeaaaah boooy');
 });
 app
     .route('/api')
@@ -43,9 +43,9 @@ app
         if (err)
             throw err;
         else {
+            // console.log(doc)
             res.json({ tweet: doc });
         }
-        // else res.send(JSON.stringify(doc))
     }));
 })
     .post((req, res) => {
