@@ -32,16 +32,35 @@ app
 app
 .route('/api')
 .get((req, res) => {
-    Feed.find(async(err: any, doc: any) => {
+    Feed.find(async(err: Error, doc: Object) => {
         if (err) throw err
         else { res.json({ tweet: doc }) }
+        // else res.send(JSON.stringify(doc))
     })
 })
 .post((req, res) => {
-    Feed.create(req.body, (err: Error, doc: any) =>{
+    Feed.create(req.body, (err: Error, doc: Object) =>{
         if (err) throw err;
         else console.log(doc);
     })
+})
+
+app
+.route('/delete_tweet')
+.get((req, res) => {
+    
+})
+.post((req, res) => {
+    console.log(req.body.tweet)
+    const tweet_id = req.body.tweet
+    Feed.findOneAndDelete({_id: tweet_id }, (err: Error, docs: Object) => {
+        if (err){
+            console.log(err)
+        }
+        else{
+            console.log("Deleted User : ", docs);
+        }
+    });
 })
 
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {

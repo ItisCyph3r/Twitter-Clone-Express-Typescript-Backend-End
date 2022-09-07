@@ -45,6 +45,7 @@ app
         else {
             res.json({ tweet: doc });
         }
+        // else res.send(JSON.stringify(doc))
     }));
 })
     .post((req, res) => {
@@ -53,6 +54,22 @@ app
             throw err;
         else
             console.log(doc);
+    });
+});
+app
+    .route('/delete_tweet')
+    .get((req, res) => {
+})
+    .post((req, res) => {
+    console.log(req.body.tweet);
+    const tweet_id = req.body.tweet;
+    Feed.findOneAndDelete({ _id: tweet_id }, (err, docs) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            console.log("Deleted User : ", docs);
+        }
     });
 });
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {
