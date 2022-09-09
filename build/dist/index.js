@@ -40,10 +40,12 @@ app.use((0, express_session_1.default)({
 app.use(passport_1.default.initialize());
 app.use(passport_1.default.session());
 passport_1.default.serializeUser((user, done) => {
-    return done(null, user);
+    return done(null, user._id);
 });
-passport_1.default.deserializeUser((user, done) => {
-    return done(null, user);
+passport_1.default.deserializeUser((id, done) => {
+    user_1.User.findById(id, (error, doc) => {
+        return done(null, doc);
+    });
 });
 passport_1.default.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -68,26 +70,37 @@ passport_1.default.use(new GoogleStrategy({
                 else
                     return console.log(doc);
             });
+            cb(null, newUser);
         }
-        // else{
-        //     User.findOne({ googleId: profile.id }, (err: Error, doc: any) => {
-        //         if (err) return cb(err, null)
-        //         if (doc)
-        //     })
-        // }
+        cb(null, doc);
     }));
-    cb(null, profile);
 }));
 passport_1.default.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/github/callback"
 }, function (accessToken, refreshToken, profile, cb) {
-    // User.findOrCreate({ githubId: profile.id }, function (err, user) {
-    // return cb(err, user);
-    // });
     console.log(profile);
-    cb(null, profile);
+    user_1.User.findOne({ githubId: profile.id }, (err, doc) => __awaiter(this, void 0, void 0, function* () {
+        if (err)
+            return cb(err, null);
+        if (!doc) {
+            const newUser = new user_1.User({
+                displayname: profile.username + '1',
+                username: profile.username,
+                githubId: profile.id,
+                displayPicture: profile.photos[0].value
+            });
+            yield newUser.save((error, doc) => {
+                if (err)
+                    return error;
+                else
+                    return console.log(doc);
+            });
+            cb(null, newUser);
+        }
+        cb(null, doc);
+    }));
 }));
 app
     .route('/auth/google')

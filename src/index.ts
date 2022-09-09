@@ -37,11 +37,14 @@ app.use(passport.session());
 
 
 passport.serializeUser((user: any, done: any) => {
-    return done(null, user);
+    return done(null, user._id);
 })
 
-passport.deserializeUser((user: any, done: any) => {
-    return done(null, user);
+passport.deserializeUser((id: string, done: any) => {
+    User.findById(id, (error: Error, doc: IUser) => {
+        return done(null, doc);
+    })
+    
 })
 
 
@@ -72,16 +75,10 @@ function (accessToken: any, refreshToken: any, profile: any, cb: any) {
                 if (err) return error
                 else return console.log(doc)
             });
+            cb(null, newUser)
         }
-        // else{
-        //     User.findOne({ googleId: profile.id }, (err: Error, doc: any) => {
-        //         if (err) return cb(err, null)
-        //         if (doc)
-        //     })
-        // }
+        cb(null, doc)
     })
-
-    cb(null, profile)
 }
 ));
 
@@ -94,13 +91,31 @@ passport.use(new GitHubStrategy({
     callbackURL: "http://localhost:4000/auth/github/callback"
     },
     function(accessToken: any, refreshToken: any, profile: any, cb: any) {
-        // User.findOrCreate({ githubId: profile.id }, function (err, user) {
-        // return cb(err, user);
-        // });
-
         console.log(profile)
-        cb(null, profile)
-    })
+
+        User.findOne({ githubId: profile.id}, async (err: Error, doc: IUser) => {
+            
+            if (err) return cb(err, null)
+
+            if(!doc){
+                const newUser = new User({
+                    displayname: profile.username + '1',
+                    username: profile.username,
+                    githubId: profile.id,
+                    displayPicture: profile.photos[0].value
+                });
+
+                await newUser.save((error, doc) => {
+                    if (err) return error
+                    else return console.log(doc)
+                });
+                cb(null, newUser)
+            }
+            cb(null, doc)
+        })
+
+        
+})
 );
 
 app

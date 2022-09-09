@@ -26,7 +26,7 @@ const userSchema = new mongoose_1.default.Schema({
         required: false,
         type: String
     },
-    twitterId: {
+    githubId: {
         required: false,
         type: String
     },
