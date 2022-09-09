@@ -56,7 +56,7 @@ passport.use(new GoogleStrategy({
 },
 function (accessToken: any, refreshToken: any, profile: any, cb: any) {
 
-    console.log(profile)
+    // console.log(profile)
     
 
     User.findOne({ googleId: profile.id}, async (err: Error, doc: IUser) => {
@@ -91,7 +91,7 @@ passport.use(new GitHubStrategy({
     callbackURL: "http://localhost:4000/auth/github/callback"
     },
     function(accessToken: any, refreshToken: any, profile: any, cb: any) {
-        console.log(profile)
+        // console.log(profile)
 
         User.findOne({ githubId: profile.id}, async (err: Error, doc: IUser) => {
             

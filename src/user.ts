@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         type: String
     },
+    displayName: {
+        required: false,
+        type: String
+    },
     googleId:{
         required: false,
         type: String
@@ -31,7 +35,7 @@ const userSchema = new mongoose.Schema({
         required: false,
         type: String
     }
-})
+}, {timestamps: true})
 // const googleUserSchema = new mongoose.Schema({
 //     username: String,
 //     googleId: String,

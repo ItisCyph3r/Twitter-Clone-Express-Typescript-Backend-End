@@ -53,7 +53,7 @@ passport_1.default.use(new GoogleStrategy({
     callbackURL: "http://localhost:4000/auth/google/callback",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 }, function (accessToken, refreshToken, profile, cb) {
-    console.log(profile);
+    // console.log(profile)
     user_1.User.findOne({ googleId: profile.id }, (err, doc) => __awaiter(this, void 0, void 0, function* () {
         if (err)
             return cb(err, null);
@@ -80,7 +80,7 @@ passport_1.default.use(new GitHubStrategy({
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/github/callback"
 }, function (accessToken, refreshToken, profile, cb) {
-    console.log(profile);
+    // console.log(profile)
     user_1.User.findOne({ githubId: profile.id }, (err, doc) => __awaiter(this, void 0, void 0, function* () {
         if (err)
             return cb(err, null);
