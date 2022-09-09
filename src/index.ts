@@ -2,27 +2,141 @@ import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
-import moment from 'moment';
+import cors from 'cors';
+import session from 'express-session';
+import passport from 'passport';
+import { Feed, User } from './user';
+import { IUser } from './types';
+var GoogleStrategy = require('passport-google-oauth20');
+var GitHubStrategy = require('passport-github').Strategy;
 
 dotenv.config();
 const host = '0.0.0.0'
 const app: Express = express();
 const port = process.env.PORT;
 
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
+// db config
 
 mongoose.connect(process.env.USER_SECRET, () => {console.log('Connected to Mongoose successfull')})
 
-const postSchema = new mongoose.Schema({
-    uuid: Number,
-    tweet: String,
-    date: String,
-    formattedDate: String,
-    rawdata: Object
+
+// middleware
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+app.use(cors({ origin: "http://localhost:3000", credentials: true}));
+app.use(
+    session({
+        secret: "secretcode",
+        resave: true,
+        saveUninitialized: true
+    })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+passport.serializeUser((user: any, done: any) => {
+    return done(null, user);
 })
 
-const Feed = mongoose.model('feed', postSchema);
+passport.deserializeUser((user: any, done: any) => {
+    return done(null, user);
+})
+
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:4000/auth/google/callback",
+    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+},
+function (accessToken: any, refreshToken: any, profile: any, cb: any) {
+
+    console.log(profile)
+    
+
+    User.findOne({ googleId: profile.id}, async (err: Error, doc: IUser) => {
+        
+        if (err) return cb(err, null)
+
+        if(!doc){
+            const newUser = new User({
+                displayname: profile.displayname + '1',
+                username: profile.displayName,
+                googleId: profile.id,
+                displayPicture: profile.photos[0].value
+            });
+
+            await newUser.save((error, doc) => {
+                if (err) return error
+                else return console.log(doc)
+            });
+        }
+        // else{
+        //     User.findOne({ googleId: profile.id }, (err: Error, doc: any) => {
+        //         if (err) return cb(err, null)
+        //         if (doc)
+        //     })
+        // }
+    })
+
+    cb(null, profile)
+}
+));
+
+
+
+
+passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: "http://localhost:4000/auth/github/callback"
+    },
+    function(accessToken: any, refreshToken: any, profile: any, cb: any) {
+        // User.findOrCreate({ githubId: profile.id }, function (err, user) {
+        // return cb(err, user);
+        // });
+
+        console.log(profile)
+        cb(null, profile)
+    })
+);
+
+app
+    .route('/auth/google')
+    .get(passport.authenticate('google', {
+        scope: ['profile']
+    }));
+
+app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login',
+        failureMessage: true
+    }),
+    function (req, res) {
+        res.redirect('http://localhost:3000/home');
+    });
+
+app
+    .route('/auth/github')
+    .get(passport.authenticate('github', {
+        scope: ['profile']
+    }));
+
+app.get('/auth/github/callback',
+    passport.authenticate('github', { failureRedirect: '/login',
+        failureMessage: true
+    }),
+    function (req, res) {
+        res.redirect('http://localhost:3000/home');
+    });
+
+app
+    .route('/getuser')
+    .get((req, res) => {
+        res.send(req.user);
+    })
+
 
 
 app
