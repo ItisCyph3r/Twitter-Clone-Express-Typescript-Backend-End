@@ -35,7 +35,9 @@ const userSchema = new mongoose.Schema({
     displayPicture:{
         required: false,
         type: String
-    }
+    },
+    tweets: []
+    // tweets: [postSchema]
 }, {timestamps: true})
 // const googleUserSchema = new mongoose.Schema({
 //     username: String,

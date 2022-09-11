@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import mongoose, { Mongoose } from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import session from 'express-session';
@@ -165,22 +165,59 @@ app
 app
 .route('/api')
 .get((req, res) => {
-    Feed.find(async(err: any, doc: any) => {
-        if (err) throw err
-        else { 
+
+    User.find({}, async (err: Error, doc: any) => {
+        if (err) return err;
+        else {
             // console.log(doc)
-            res.json({ tweet: doc })   
+            // console.log(doc[0].tweets)
+            const feedData: {[key:number]: Object} = {};
+            // await doc.forEach((element: any) => {
+            //     // console.log(element.username)
+            //     feedData = {
+            //         username: element.username, 
+            //         displayName: element.displayName, 
+            //         displayPicture: element.displayPicture, 
+            //         tweet: element.tweets
+            //     };
+            // })
+            for (var i = 0; i < doc.length; i++) {
+
+                feedData[i] = {
+                    username: doc[i].username, 
+                    displayName: doc[i].displayName, 
+                    displayPicture: doc[i].displayPicture, 
+                    tweet: doc[i].tweets
+                };
+            }
+            // await console.log(feedData)
+            
+            await res.json({feed: feedData})
+            
         }
     })
 })
+
 .post((req, res) => {
     console.log(req.body)
-    Feed.create(req.body, (err: any, doc: any) =>{
-        if (err) throw err;
-        else {
-            // console.log(doc);
-        }
-    })
+
+    User.findOneAndUpdate(
+        {
+            _id: req.body.id
+        },
+        {
+            $push: {
+                tweets: req.body
+            },
+        },
+        {$upsert: true,},
+        ((err: mongoose.CallbackError, doc: any) => {
+            if(err) return console.log(err)
+            else {
+                // console.log(doc)
+            }
+        })
+    )
 })
 
 app
