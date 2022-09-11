@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema({
+    author: String,
     uuid: Number,
     tweet: String,
     date: String,

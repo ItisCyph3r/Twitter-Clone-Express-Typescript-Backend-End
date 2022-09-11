@@ -6,9 +6,9 @@ import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import { Feed, User } from './user';
-import { IUser } from './types';
-var GoogleStrategy = require('passport-google-oauth20');
-var GitHubStrategy = require('passport-github').Strategy;
+import { IMongoDBUser, IUser } from './types';
+const GoogleStrategy = require('passport-google-oauth20');
+const GitHubStrategy = require('passport-github').Strategy;
 
 dotenv.config();
 const host = '0.0.0.0'
@@ -36,12 +36,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-passport.serializeUser((user: any, done: any) => {
+passport.serializeUser((user: IMongoDBUser, done: any) => {
     return done(null, user._id);
 })
 
 passport.deserializeUser((id: string, done: any) => {
-    User.findById(id, (error: Error, doc: IUser) => {
+    User.findById(id, (error: Error, doc: IMongoDBUser) => {
         return done(null, doc);
     })
     
@@ -54,18 +54,18 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:4000/auth/google/callback",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 },
-function (accessToken: any, refreshToken: any, profile: any, cb: any) {
+function (_: any, __: any, profile: any, cb: any) {
 
     // console.log(profile)
     
 
-    User.findOne({ googleId: profile.id}, async (err: Error, doc: IUser) => {
+    User.findOne({ googleId: profile.id}, async (err: Error, doc: IMongoDBUser) => {
         
         if (err) return cb(err, null)
 
         if(!doc){
             const newUser = new User({
-                displayname: profile.displayname + '1',
+                displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
                 username: profile.displayName,
                 googleId: profile.id,
                 displayPicture: profile.photos[0].value
@@ -90,33 +90,33 @@ passport.use(new GitHubStrategy({
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/github/callback"
     },
-    function(accessToken: any, refreshToken: any, profile: any, cb: any) {
+    function (_: any, __: any, profile: any, cb: any) {
         // console.log(profile)
 
-        User.findOne({ githubId: profile.id}, async (err: Error, doc: IUser) => {
+        User.findOne({ githubId: profile.id}, async (err: Error, doc: IMongoDBUser) => {
             
             if (err) return cb(err, null)
 
             if(!doc){
                 const newUser = new User({
-                    displayname: profile.username + '1',
+                    displayName: profile.username + Math.floor(1000 + Math.random() * 9000),
                     username: profile.username,
                     githubId: profile.id,
                     displayPicture: profile.photos[0].value
                 });
 
                 await newUser.save((error, doc) => {
-                    if (err) return error
-                    else return console.log(doc)
+                    if (err)
+                        return error;
+                    else
+                        return console.log(doc);
                 });
                 cb(null, newUser)
             }
             cb(null, doc)
         })
-
-        
-})
-);
+    }
+));
 
 app
     .route('/auth/google')
@@ -125,7 +125,8 @@ app
     }));
 
 app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login',
+    // passport.authenticate('google', { failureRedirect: '/login',
+    passport.authenticate('google', {
         failureMessage: true
     }),
     function (req, res) {
@@ -139,7 +140,8 @@ app
     }));
 
 app.get('/auth/github/callback',
-    passport.authenticate('github', { failureRedirect: '/login',
+    // passport.authenticate('github', { failureRedirect: '/login',
+    passport.authenticate('github', {
         failureMessage: true
     }),
     function (req, res) {
@@ -172,9 +174,12 @@ app
     })
 })
 .post((req, res) => {
+    console.log(req.body)
     Feed.create(req.body, (err: any, doc: any) =>{
         if (err) throw err;
-        else console.log(doc);
+        else {
+            // console.log(doc);
+        }
     })
 })
 
@@ -195,6 +200,18 @@ app
         }
     });
 })
+
+app
+.route('/auth/logout')
+.get((req, res) => {
+    if(req.user){
+        req.logout((error) => {
+            if (error) return error
+        });
+        // res.send("Logout Successful")
+    }
+})
+
 
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {
     console.log(`⚡️[server]: Server is running at https://localhost:${port}`);

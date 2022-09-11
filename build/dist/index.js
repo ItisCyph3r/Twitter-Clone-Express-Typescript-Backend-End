@@ -20,8 +20,8 @@ const cors_1 = __importDefault(require("cors"));
 const express_session_1 = __importDefault(require("express-session"));
 const passport_1 = __importDefault(require("passport"));
 const user_1 = require("./user");
-var GoogleStrategy = require('passport-google-oauth20');
-var GitHubStrategy = require('passport-github').Strategy;
+const GoogleStrategy = require('passport-google-oauth20');
+const GitHubStrategy = require('passport-github').Strategy;
 dotenv_1.default.config();
 const host = '0.0.0.0';
 const app = (0, express_1.default)();
@@ -52,14 +52,14 @@ passport_1.default.use(new GoogleStrategy({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/google/callback",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
-}, function (accessToken, refreshToken, profile, cb) {
+}, function (_, __, profile, cb) {
     // console.log(profile)
     user_1.User.findOne({ googleId: profile.id }, (err, doc) => __awaiter(this, void 0, void 0, function* () {
         if (err)
             return cb(err, null);
         if (!doc) {
             const newUser = new user_1.User({
-                displayname: profile.displayname + '1',
+                displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
                 username: profile.displayName,
                 googleId: profile.id,
                 displayPicture: profile.photos[0].value
@@ -79,14 +79,14 @@ passport_1.default.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/github/callback"
-}, function (accessToken, refreshToken, profile, cb) {
+}, function (_, __, profile, cb) {
     // console.log(profile)
     user_1.User.findOne({ githubId: profile.id }, (err, doc) => __awaiter(this, void 0, void 0, function* () {
         if (err)
             return cb(err, null);
         if (!doc) {
             const newUser = new user_1.User({
-                displayname: profile.username + '1',
+                displayName: profile.username + Math.floor(1000 + Math.random() * 9000),
                 username: profile.username,
                 githubId: profile.id,
                 displayPicture: profile.photos[0].value
@@ -107,7 +107,9 @@ app
     .get(passport_1.default.authenticate('google', {
     scope: ['profile']
 }));
-app.get('/auth/google/callback', passport_1.default.authenticate('google', { failureRedirect: '/login',
+app.get('/auth/google/callback', 
+// passport.authenticate('google', { failureRedirect: '/login',
+passport_1.default.authenticate('google', {
     failureMessage: true
 }), function (req, res) {
     res.redirect('http://localhost:3000/home');
@@ -117,7 +119,9 @@ app
     .get(passport_1.default.authenticate('github', {
     scope: ['profile']
 }));
-app.get('/auth/github/callback', passport_1.default.authenticate('github', { failureRedirect: '/login',
+app.get('/auth/github/callback', 
+// passport.authenticate('github', { failureRedirect: '/login',
+passport_1.default.authenticate('github', {
     failureMessage: true
 }), function (req, res) {
     res.redirect('http://localhost:3000/home');
@@ -145,11 +149,13 @@ app
     }));
 })
     .post((req, res) => {
+    console.log(req.body);
     user_1.Feed.create(req.body, (err, doc) => {
         if (err)
             throw err;
-        else
-            console.log(doc);
+        else {
+            // console.log(doc);
+        }
     });
 });
 app
@@ -167,6 +173,17 @@ app
             console.log("Deleted User : ", docs);
         }
     });
+});
+app
+    .route('/auth/logout')
+    .get((req, res) => {
+    if (req.user) {
+        req.logout((error) => {
+            if (error)
+                return error;
+        });
+        // res.send("Logout Successful")
+    }
 });
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {
     console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
