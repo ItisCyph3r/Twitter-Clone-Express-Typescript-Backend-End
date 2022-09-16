@@ -29,7 +29,7 @@ const port = process.env.PORT;
 // db config
 mongoose_1.default.connect(process.env.USER_SECRET, () => { console.log('Connected to Mongoose successfull'); });
 // middleware
-app.use(body_parser_1.default.urlencoded({ extended: false }));
+app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use(body_parser_1.default.json());
 app.use((0, cors_1.default)({ origin: "http://localhost:3000", credentials: true }));
 app.use((0, express_session_1.default)({
@@ -39,24 +39,18 @@ app.use((0, express_session_1.default)({
 }));
 app.use(passport_1.default.initialize());
 app.use(passport_1.default.session());
-passport_1.default.serializeUser((user, done) => {
-    return done(null, user._id);
-});
-passport_1.default.deserializeUser((id, done) => {
-    user_1.User.findById(id, (error, doc) => {
-        return done(null, doc);
-    });
-});
 passport_1.default.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/google/callback",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
-}, function (_, __, profile, cb) {
+}, (_, __, profile, cb) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log(profile)
-    user_1.User.findOne({ googleId: profile.id }, (err, doc) => __awaiter(this, void 0, void 0, function* () {
-        if (err)
-            return cb(err, null);
+    user_1.User.findOne({ googleId: profile.id }, (err, doc) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            console.log('Fuck you there is an error');
+            cb(err, null);
+        }
         if (!doc) {
             const newUser = new user_1.User({
                 displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
@@ -71,10 +65,11 @@ passport_1.default.use(new GoogleStrategy({
                     return console.log(doc);
             });
             cb(null, newUser);
+            // cb(null, profile)
         }
         cb(null, doc);
     }));
-}));
+})));
 passport_1.default.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
@@ -107,13 +102,19 @@ app
     .get(passport_1.default.authenticate('google', {
     scope: ['profile']
 }));
-app.get('/auth/google/callback', 
-// passport.authenticate('google', { failureRedirect: '/login',
-passport_1.default.authenticate('google', {
+app.get('/auth/google/callback', passport_1.default.authenticate('google', {
     failureMessage: true
 }), function (req, res) {
     res.redirect('http://localhost:3000/home');
 });
+// app.get('/auth/google/callback', (req, res) => {
+//     passport.authenticate('google', {
+//         failureMessage: true
+//     }),
+//     function (req: any, res: any) {
+//         res.redirect('http://localhost:3000/home');
+//     }
+// })
 app
     .route('/auth/github')
     .get(passport_1.default.authenticate('github', {

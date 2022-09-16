@@ -11,13 +11,6 @@ const postSchema = new mongoose_1.default.Schema({
     tweet: String,
     date: String,
 });
-// const localUserSchema = new mongoose.Schema({
-//     username: String,
-//     displayname: String,
-//     isValid: Boolean,
-//     uniqueString: String,
-//     OTP: Number,
-// }, {timestamps: true})
 const userSchema = new mongoose_1.default.Schema({
     username: {
         required: true,
@@ -42,17 +35,5 @@ const userSchema = new mongoose_1.default.Schema({
     tweets: []
     // tweets: [postSchema]
 }, { timestamps: true });
-// const googleUserSchema = new mongoose.Schema({
-//     username: String,
-//     googleId: String,
-//     picture: String
-// }, {timestamps: true})
-// const githubUserSchema = new mongoose.Schema({
-//     username: String,
-//     githubId: String,
-//     picture: String
-// }, {timestamps: true})
 exports.Feed = mongoose_1.default.model('feed', postSchema);
 exports.User = mongoose_1.default.model('user', userSchema);
-// const Local = mongoose.model('LocalUser', localUserSchema);
-// const Google =  mongoose.model('GoogleUser', googleUserSchema);

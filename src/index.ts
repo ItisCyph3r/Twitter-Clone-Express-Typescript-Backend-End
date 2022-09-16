@@ -22,7 +22,7 @@ mongoose.connect(process.env.USER_SECRET, () => {console.log('Connected to Mongo
 
 // middleware
 
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(
@@ -35,33 +35,23 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-passport.serializeUser((user: IMongoDBUser, done: any) => {
-    return done(null, user._id);
-})
-
-passport.deserializeUser((id: string, done: any) => {
-    User.findById(id, (error: Error, doc: IMongoDBUser) => {
-        return done(null, doc);
-    })
-    
-})
-
-
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/google/callback",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 },
-function (_: any, __: any, profile: any, cb: any) {
+async (_: any, __: any, profile: any, cb: any) => {
 
     // console.log(profile)
     
 
     User.findOne({ googleId: profile.id}, async (err: Error, doc: IMongoDBUser) => {
         
-        if (err) return cb(err, null)
+        if (err) {
+            console.log('Fuck you there is an error')
+            cb(err, null)
+        }
 
         if(!doc){
             const newUser = new User({
@@ -75,8 +65,10 @@ function (_: any, __: any, profile: any, cb: any) {
                 if (err) return error
                 else return console.log(doc)
             });
+
             cb(null, newUser)
-        }
+            // cb(null, profile)
+        }   
         cb(null, doc)
     })
 }
@@ -112,6 +104,7 @@ passport.use(new GitHubStrategy({
                         return console.log(doc);
                 });
                 cb(null, newUser)
+                
             }
             cb(null, doc)
         })
@@ -125,13 +118,24 @@ app
     }));
 
 app.get('/auth/google/callback',
-    // passport.authenticate('google', { failureRedirect: '/login',
     passport.authenticate('google', {
         failureMessage: true
     }),
     function (req, res) {
         res.redirect('http://localhost:3000/home');
     });
+
+// app.get('/auth/google/callback', (req, res) => {
+//     passport.authenticate('google', {
+//         failureMessage: true
+//     }),
+//     function (req: any, res: any) {
+//         res.redirect('http://localhost:3000/home');
+//     }
+// })
+    
+
+    
 
 app
     .route('/auth/github')
