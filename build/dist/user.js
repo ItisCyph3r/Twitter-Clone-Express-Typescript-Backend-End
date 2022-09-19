@@ -7,6 +7,7 @@ exports.User = exports.Feed = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const postSchema = new mongoose_1.default.Schema({
     author: String,
+    userId: String,
     uuid: Number,
     tweet: String,
     date: String,

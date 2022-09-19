@@ -130,29 +130,45 @@ app
 app
     .route('/')
     .get((req, res) => {
-    res.send('yeaaaah booosy');
+    res.send('yeaaaah boooy');
 });
 app
     .route('/api')
     .get((req, res) => {
-    user_1.Feed.find((err, doc) => __awaiter(void 0, void 0, void 0, function* () {
+    user_1.User.find({}, (err, doc) => __awaiter(void 0, void 0, void 0, function* () {
         if (err)
-            throw err;
+            return err;
         else {
-            // console.log(doc)
-            res.json({ tweet: doc });
+            const feedData = {};
+            for (var i = 0; i < doc.length; i++) {
+                // console.log(doc[i])
+                feedData[i] = {
+                    username: doc[i].username,
+                    displayName: doc[i].displayName,
+                    displayPicture: doc[i].displayPicture,
+                    tweet: doc[i].tweets,
+                    date: doc[i].date
+                };
+            }
+            yield res.json({ feed: feedData });
         }
     }));
 })
     .post((req, res) => {
     console.log(req.body);
-    user_1.Feed.create(req.body, (err, doc) => {
+    user_1.User.findOneAndUpdate({
+        _id: req.body.id
+    }, {
+        $push: {
+            tweets: req.body
+        },
+    }, { $upsert: true, }, ((err, doc) => {
         if (err)
-            throw err;
+            return console.log(err);
         else {
-            // console.log(doc);
+            console.log(doc, 'yes');
         }
-    });
+    }));
 });
 app
     .route('/delete_tweet')

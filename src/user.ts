@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema({
     author: String,
+    userId: String,
     uuid: Number,
     tweet: String,
     date: String,

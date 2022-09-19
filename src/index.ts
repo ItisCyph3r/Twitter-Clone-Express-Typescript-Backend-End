@@ -135,7 +135,7 @@ app.get('/auth/github/callback',
         res.redirect('http://localhost:3000/home');
     });
 
-app
+    app
     .route('/getuser')
     .get((req, res) => {
         res.send(req.user);
@@ -146,29 +146,55 @@ app
 app
 .route('/')
 .get((req, res) => {
-    res.send('yeaaaah booosy')
+    res.send('yeaaaah boooy')
 })
 
 app
 .route('/api')
 .get((req, res) => {
-    Feed.find(async(err: any, doc: any) => {
-        if (err) throw err
-        else { 
-            // console.log(doc)
+
+    User.find({}, async (err: Error, doc: any) => {
+        if (err) return err;
+        else {
+            const feedData: {[key:number]: Object} = {};
             
-            res.json({ tweet: doc })   
+            for (var i = 0; i < doc.length; i++) {
+                // console.log(doc[i])
+                feedData[i] = {
+                    username: doc[i].username, 
+                    displayName: doc[i].displayName, 
+                    displayPicture: doc[i].displayPicture, 
+                    tweet: doc[i].tweets,
+                    date: doc[i].date
+                };
+            }
+            
+            await res.json({feed: feedData})
+            
         }
     })
 })
+
 .post((req, res) => {
     console.log(req.body)
-    Feed.create(req.body, (err: any, doc: any) =>{
-        if (err) throw err;
-        else {
-            // console.log(doc);
-        }
-    })
+
+    User.findOneAndUpdate(
+        {
+            _id: req.body.id
+        },
+        {
+            $push: {
+                tweets: req.body
+            },
+        },
+        {$upsert: true,},
+        ((err: mongoose.CallbackError, doc: any) => {
+            if(err) return console.log(err)
+            else {
+                console.log(doc, 'yes')
+            }
+        })
+    )
 })
 
 app
@@ -204,4 +230,3 @@ app
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {
     console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
 })
-
