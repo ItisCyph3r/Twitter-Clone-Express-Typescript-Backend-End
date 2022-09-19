@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import mongoose, { Mongoose } from 'mongoose';
+import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import session from 'express-session';
@@ -22,7 +22,7 @@ mongoose.connect(process.env.USER_SECRET, () => {console.log('Connected to Mongo
 
 // middleware
 
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(
@@ -35,41 +35,43 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+passport.serializeUser((user: IMongoDBUser, done: any) => {
+    return done(null, user._id);
+})
+
+passport.deserializeUser((id: string, done: any) => {
+    User.findById(id, (error: Error, doc: IMongoDBUser) => {
+        return done(null, doc);
+    })
+    
+})
+
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "http://localhost:4000/auth/google/callback",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 },
-async (_: any, __: any, profile: any, cb: any) => {
+function (_: any, __: any, profile: any, cb: any) {  
 
-    // console.log(profile)
-    
-
-    User.findOne({ googleId: profile.id}, async (err: Error, doc: IMongoDBUser) => {
+    User.findOne({ googleId: profile.id}, async function (err: Error, doc: IMongoDBUser){
         
-        if (err) {
-            console.log('Fuck you there is an error')
-            cb(err, null)
+        if(!err){
+            if(doc){
+                return cb(err, doc)
+            } else{
+                User.create({
+                    displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
+                    username: profile.displayName,
+                    googleId: profile.id,
+                    displayPicture: profile.photos[0].value
+                }, (err, user) => {
+                    return cb(err, user)
+                })
+            }
         }
-
-        if(!doc){
-            const newUser = new User({
-                displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
-                username: profile.displayName,
-                googleId: profile.id,
-                displayPicture: profile.photos[0].value
-            });
-
-            await newUser.save((error, doc) => {
-                if (err) return error
-                else return console.log(doc)
-            });
-
-            cb(null, newUser)
-            // cb(null, profile)
-        }   
-        cb(null, doc)
     })
 }
 ));
@@ -83,30 +85,22 @@ passport.use(new GitHubStrategy({
     callbackURL: "http://localhost:4000/auth/github/callback"
     },
     function (_: any, __: any, profile: any, cb: any) {
-        // console.log(profile)
-
-        User.findOne({ githubId: profile.id}, async (err: Error, doc: IMongoDBUser) => {
-            
-            if (err) return cb(err, null)
-
-            if(!doc){
-                const newUser = new User({
-                    displayName: profile.username + Math.floor(1000 + Math.random() * 9000),
-                    username: profile.username,
-                    githubId: profile.id,
-                    displayPicture: profile.photos[0].value
-                });
-
-                await newUser.save((error, doc) => {
-                    if (err)
-                        return error;
-                    else
-                        return console.log(doc);
-                });
-                cb(null, newUser)
-                
+        User.findOne({ githubId: profile.id }, async function (err: Error, doc: IMongoDBUser){
+        
+            if(!err){
+                if(doc){
+                    return cb(err, doc)
+                } else{
+                    User.create({
+                        displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
+                        username: profile.displayName,
+                        githubId: profile.id,
+                        displayPicture: profile.photos[0].value
+                    }, (err, user) => {
+                        return cb(err, user)
+                    })
+                }
             }
-            cb(null, doc)
         })
     }
 ));
@@ -118,24 +112,13 @@ app
     }));
 
 app.get('/auth/google/callback',
+    // passport.authenticate('google', { failureRedirect: '/login',
     passport.authenticate('google', {
         failureMessage: true
     }),
     function (req, res) {
         res.redirect('http://localhost:3000/home');
     });
-
-// app.get('/auth/google/callback', (req, res) => {
-//     passport.authenticate('google', {
-//         failureMessage: true
-//     }),
-//     function (req: any, res: any) {
-//         res.redirect('http://localhost:3000/home');
-//     }
-// })
-    
-
-    
 
 app
     .route('/auth/github')
@@ -163,65 +146,29 @@ app
 app
 .route('/')
 .get((req, res) => {
-    res.send('yeaaaah boooy')
+    res.send('yeaaaah booosy')
 })
 
 app
 .route('/api')
 .get((req, res) => {
-
-    User.find({}, async (err: Error, doc: any) => {
-        if (err) return err;
-        else {
+    Feed.find(async(err: any, doc: any) => {
+        if (err) throw err
+        else { 
             // console.log(doc)
-            // console.log(doc[0].tweets)
-            const feedData: {[key:number]: Object} = {};
-            // await doc.forEach((element: any) => {
-            //     // console.log(element.username)
-            //     feedData = {
-            //         username: element.username, 
-            //         displayName: element.displayName, 
-            //         displayPicture: element.displayPicture, 
-            //         tweet: element.tweets
-            //     };
-            // })
-            for (var i = 0; i < doc.length; i++) {
-
-                feedData[i] = {
-                    username: doc[i].username, 
-                    displayName: doc[i].displayName, 
-                    displayPicture: doc[i].displayPicture, 
-                    tweet: doc[i].tweets
-                };
-            }
-            // await console.log(feedData)
             
-            await res.json({feed: feedData})
-            
+            res.json({ tweet: doc })   
         }
     })
 })
-
 .post((req, res) => {
     console.log(req.body)
-
-    User.findOneAndUpdate(
-        {
-            _id: req.body.id
-        },
-        {
-            $push: {
-                tweets: req.body
-            },
-        },
-        {$upsert: true,},
-        ((err: mongoose.CallbackError, doc: any) => {
-            if(err) return console.log(err)
-            else {
-                // console.log(doc)
-            }
-        })
-    )
+    Feed.create(req.body, (err: any, doc: any) =>{
+        if (err) throw err;
+        else {
+            // console.log(doc);
+        }
+    })
 })
 
 app
