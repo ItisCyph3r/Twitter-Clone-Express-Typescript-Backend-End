@@ -13,7 +13,7 @@ const postSchema = new mongoose_1.default.Schema({
     date: String,
 });
 const userSchema = new mongoose_1.default.Schema({
-    username: {
+    userName: {
         required: true,
         type: String
     },

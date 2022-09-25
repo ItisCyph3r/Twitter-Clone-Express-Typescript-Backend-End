@@ -1,5 +1,5 @@
 export interface IUser{
-    username: string;
+    userName: string;
     displayName?: string;
     googleId?: string;
     githubId?: string;
@@ -7,7 +7,7 @@ export interface IUser{
 }
 
 export interface IMongoDBUser{
-    username: string;
+    userName: string;
     googleId?: string;
     githubId?: string;
     displayPicture?: string;

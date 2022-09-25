@@ -61,8 +61,8 @@ passport_1.default.use(new GoogleStrategy({
                 }
                 else {
                     user_1.User.create({
-                        displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
-                        username: profile.displayName,
+                        displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
+                        userName: profile.displayName,
                         googleId: profile.id,
                         displayPicture: profile.photos[0].value
                     }, (err, user) => {
@@ -86,8 +86,8 @@ passport_1.default.use(new GitHubStrategy({
                 }
                 else {
                     user_1.User.create({
-                        displayName: profile.displayname + Math.floor(1000 + Math.random() * 9000),
-                        username: profile.displayName,
+                        displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
+                        userName: profile.displayName,
                         githubId: profile.id,
                         displayPicture: profile.photos[0].value
                     }, (err, user) => {
@@ -125,6 +125,7 @@ passport_1.default.authenticate('github', {
 app
     .route('/getuser')
     .get((req, res) => {
+    console.log(req.user);
     res.send(req.user);
 });
 app
@@ -143,32 +144,42 @@ app
             for (var i = 0; i < doc.length; i++) {
                 // console.log(doc[i])
                 feedData[i] = {
-                    username: doc[i].username,
+                    userName: doc[i].userName,
                     displayName: doc[i].displayName,
                     displayPicture: doc[i].displayPicture,
                     tweet: doc[i].tweets,
-                    date: doc[i].date
                 };
             }
             yield res.json({ feed: feedData });
         }
     }));
+    // Feed.find({}, (err: Error, doc: any) => {
+    //     if (err) return err;
+    //     else {
+    //         console.log(doc)
+    //     }
+    // })
 })
     .post((req, res) => {
-    console.log(req.body);
-    user_1.User.findOneAndUpdate({
-        _id: req.body.id
-    }, {
-        $push: {
-            tweets: req.body
-        },
-    }, { $upsert: true, }, ((err, doc) => {
+    user_1.User.findOneAndUpdate({ _id: req.body.id }, { $push: { tweets: req.body } }, { $upsert: true, }, ((err, doc) => {
         if (err)
             return console.log(err);
         else {
-            console.log(doc, 'yes');
+            console.log('user tweets updated');
         }
     }));
+    user_1.Feed.create({
+        id: req.body.id,
+        tweet: req.body.tweet,
+        uuid: req.body.uuid,
+        date: req.body.date
+    }, (err, doc) => {
+        if (err)
+            return err;
+        else {
+            console.log("feed updated");
+        }
+    });
 });
 app
     .route('/delete_tweet')
@@ -194,7 +205,7 @@ app
             if (error)
                 return error;
         });
-        // res.send("Logout Successful")
+        res.send("done");
     }
 });
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {
