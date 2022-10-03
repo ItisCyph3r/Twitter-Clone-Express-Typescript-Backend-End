@@ -22,12 +22,18 @@ const passport_1 = __importDefault(require("passport"));
 const user_1 = require("./user");
 const GoogleStrategy = require('passport-google-oauth20');
 const GitHubStrategy = require('passport-github').Strategy;
+let userFeed = [];
 dotenv_1.default.config();
 const host = '0.0.0.0';
 const app = (0, express_1.default)();
 const port = process.env.PORT;
 // db config
-mongoose_1.default.connect(process.env.USER_SECRET, () => { console.log('Connected to Mongoose successfull'); });
+try {
+    mongoose_1.default.connect(process.env.USER_SECRET, () => { console.log('Connected to Mongoose successfull'); });
+}
+catch (error) {
+    throw error;
+}
 // middleware
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
@@ -125,7 +131,7 @@ passport_1.default.authenticate('github', {
 app
     .route('/getuser')
     .get((req, res) => {
-    console.log(req.user);
+    // console.log(req.user)
     res.send(req.user);
 });
 app
@@ -133,35 +139,54 @@ app
     .get((req, res) => {
     res.send('yeaaaah boooy');
 });
+let feedArray = [];
 app
     .route('/api')
-    .get((req, res) => {
-    user_1.User.find({}, (err, doc) => __awaiter(void 0, void 0, void 0, function* () {
-        if (err)
-            return err;
-        else {
-            const feedData = {};
-            for (var i = 0; i < doc.length; i++) {
-                // console.log(doc[i])
-                feedData[i] = {
-                    userName: doc[i].userName,
-                    displayName: doc[i].displayName,
-                    displayPicture: doc[i].displayPicture,
-                    tweet: doc[i].tweets,
-                };
-            }
-            yield res.json({ feed: feedData });
+    .get((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    user_1.Feed.find({})
+        .then((doc) => {
+        for (let i = 0; i < doc.length; i++) {
+            user_1.User.findById(doc[i].userId, (err, userObject) => {
+                if (err)
+                    return err;
+                else {
+                    // console.log(userObject)
+                    let feedData = {
+                        _id: doc[i]._id,
+                        date: doc[i].date,
+                        displayName: userObject.displayName,
+                        displayPicture: userObject.displayPicture,
+                        tweet: doc[i].tweet,
+                        userName: userObject.userName,
+                        uuid: doc[i].uuid,
+                    };
+                    userFeed.push(feedData);
+                    function containsObject(obj, list) {
+                        let isValidd = false;
+                        list.forEach((element) => {
+                            if (element.uuid === obj.uuid) {
+                                isValidd = true;
+                            }
+                        });
+                        return isValidd;
+                    }
+                    const objExists = containsObject(feedData, userFeed);
+                    console.log(objExists);
+                    if (objExists === false)
+                        return userFeed.push(feedData);
+                    else {
+                        console.log('object exists');
+                    }
+                }
+            });
         }
-    }));
-    // Feed.find({}, (err: Error, doc: any) => {
-    //     if (err) return err;
-    //     else {
-    //         console.log(doc)
-    //     }
-    // })
-})
-    .post((req, res) => {
-    user_1.User.findOneAndUpdate({ _id: req.body.id }, { $push: { tweets: req.body } }, { $upsert: true, }, ((err, doc) => {
+        res.json(userFeed);
+    });
+}))
+    // res.json({data: feedData})
+    .post((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req.body);
+    user_1.User.findOneAndUpdate({ _id: req.body.userId }, { $push: { tweets: req.body } }, { $upsert: true, }, ((err, doc) => {
         if (err)
             return console.log(err);
         else {
@@ -169,7 +194,7 @@ app
         }
     }));
     user_1.Feed.create({
-        id: req.body.id,
+        userId: req.body.userId,
         tweet: req.body.tweet,
         uuid: req.body.uuid,
         date: req.body.date
@@ -180,13 +205,13 @@ app
             console.log("feed updated");
         }
     });
-});
+}));
 app
     .route('/delete_tweet')
     .get((req, res) => {
 })
     .post((req, res) => {
-    console.log(req.body.tweet);
+    // console.log(req.body.tweet)
     const tweet_id = req.body.tweet;
     user_1.Feed.findOneAndDelete({ _id: tweet_id }, (err, docs) => {
         if (err) {

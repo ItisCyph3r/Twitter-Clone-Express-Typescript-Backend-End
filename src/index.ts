@@ -9,6 +9,7 @@ import { Feed, User } from './user';
 import { IMongoDBUser, IUser } from './types';
 const GoogleStrategy = require('passport-google-oauth20');
 const GitHubStrategy = require('passport-github').Strategy;
+let userFeed: any[] = [];
 
 dotenv.config();
 const host = '0.0.0.0'
@@ -16,8 +17,12 @@ const app: Express = express();
 const port = process.env.PORT;
 
 // db config
+try {
+    mongoose.connect(process.env.USER_SECRET, () => {console.log('Connected to Mongoose successfull')})
+} catch (error: any) {
+    throw error
+}
 
-mongoose.connect(process.env.USER_SECRET, () => {console.log('Connected to Mongoose successfull')})
 
 
 // middleware
@@ -138,7 +143,7 @@ app.get('/auth/github/callback',
     app
     .route('/getuser')
     .get((req, res) => {
-        console.log(req.user)
+        // console.log(req.user)
         res.send(req.user);
     })
 
@@ -149,42 +154,65 @@ app
 .get((req, res) => {
     res.send('yeaaaah boooy')
 })
-
+let feedArray: any = [];
 app
 .route('/api')
-.get((req, res) => {
+.get(async (req, res) => {
 
-    User.find({}, async (err: Error, doc: any) => {
-        if (err) return err;
-        else {
-            const feedData: {[key:number]: Object} = {};
-            
-            for (var i = 0; i < doc.length; i++) {
-                // console.log(doc[i])
-                feedData[i] = {
-                    userName: doc[i].userName, 
-                    displayName: doc[i].displayName, 
-                    displayPicture: doc[i].displayPicture, 
-                    tweet: doc[i].tweets,
-                };
-            }
-        
-            await res.json({feed: feedData})
-            
+    Feed.find({})
+    .then((doc) => {
+        for (let i = 0; i < doc.length; i++) {
+            User.findById(doc[i].userId, (err: Error, userObject: any) => {
+                if(err) return err
+                    
+                else{    
+                    // console.log(userObject)
+                    let feedData = {
+                        _id: doc[i]._id,
+                        date: doc[i].date,
+                        displayName: userObject.displayName, 
+                        displayPicture: userObject.displayPicture, 
+                        tweet: doc[i].tweet,
+                        userName: userObject.userName,
+                        uuid: doc[i].uuid,
+                    };  
+
+                    userFeed.push(feedData)
+
+                    function containsObject(obj: any, list: any) {
+                        let isValidd: boolean = false;
+                        list.forEach((element: any) => {
+                            if (element.uuid === obj.uuid) {
+                                isValidd = true;
+                            }
+                        });
+                        return isValidd;
+                    }
+                    
+                    const objExists = containsObject(feedData, userFeed)
+
+                    console.log(objExists)
+
+                    if(objExists === false) return userFeed.push(feedData)
+
+                    else {console.log('object exists')}
+                }
+            })  
         }
+        res.json(userFeed)
     })
-    // Feed.find({}, (err: Error, doc: any) => {
-    //     if (err) return err;
-    //     else {
-    //         console.log(doc)
-    //     }
-    // })
 })
 
-.post((req, res) => {
+
+// res.json({data: feedData})
+
+
+.post( async (req, res) => {
+    console.log(req.body)
+    
 
     User.findOneAndUpdate(
-        { _id: req.body.id }, 
+        { _id: req.body.userId }, 
         { $push: { tweets: req.body } },
         {$upsert: true,},
         ((err: mongoose.CallbackError, doc: any) => {
@@ -196,7 +224,7 @@ app
     )
 
     Feed.create({
-        id: req.body.id,
+        userId: req.body.userId,
         tweet: req.body.tweet,
         uuid: req.body.uuid,
         date: req.body.date
@@ -207,6 +235,8 @@ app
             console.log("feed updated")
         }
     })
+
+    
 })
 
 app
@@ -215,7 +245,7 @@ app
     
 })
 .post((req, res) => {
-    console.log(req.body.tweet)
+    // console.log(req.body.tweet)
     const tweet_id = req.body.tweet
     Feed.findOneAndDelete({_id: tweet_id }, (err: any, docs: any) => {
         if (err){
