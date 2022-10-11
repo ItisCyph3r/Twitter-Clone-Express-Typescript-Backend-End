@@ -16,7 +16,6 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const body_parser_1 = __importDefault(require("body-parser"));
-const cors_1 = __importDefault(require("cors"));
 const express_session_1 = __importDefault(require("express-session"));
 const passport_1 = __importDefault(require("passport"));
 const user_1 = require("./user");
@@ -37,7 +36,7 @@ catch (error) {
 // middleware
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
-app.use((0, cors_1.default)({ origin: "http://localhost:3000", credentials: true }));
+// app.use(cors({ origin: "http://localhost:3000", credentials: true}));
 app.use((0, express_session_1.default)({
     secret: "secretcode",
     resave: true,
@@ -56,8 +55,8 @@ passport_1.default.deserializeUser((id, done) => {
 passport_1.default.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:4000/auth/google/callback",
-    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+    callbackURL: "/auth/google/callback",
+    // userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 }, function (_, __, profile, cb) {
     user_1.User.findOne({ googleId: profile.id }, function (err, doc) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -70,7 +69,8 @@ passport_1.default.use(new GoogleStrategy({
                         displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
                         userName: profile.displayName,
                         googleId: profile.id,
-                        displayPicture: profile.photos[0].value
+                        displayPicture: profile.photos[0].value,
+                        isVerified: false
                     }, (err, user) => {
                         return cb(err, user);
                     });
@@ -82,7 +82,7 @@ passport_1.default.use(new GoogleStrategy({
 passport_1.default.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "http://localhost:4000/auth/github/callback"
+    callbackURL: "/auth/github/callback"
 }, function (_, __, profile, cb) {
     user_1.User.findOne({ githubId: profile.id }, function (err, doc) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -95,7 +95,8 @@ passport_1.default.use(new GitHubStrategy({
                         displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
                         userName: profile.displayName,
                         githubId: profile.id,
-                        displayPicture: profile.photos[0].value
+                        displayPicture: profile.photos[0].value,
+                        isVerified: false
                     }, (err, user) => {
                         return cb(err, user);
                     });
@@ -143,66 +144,42 @@ let feedArray = [];
 app
     .route('/api')
     .get((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    user_1.Feed.find({})
-        .then((doc) => {
-        for (let i = 0; i < doc.length; i++) {
-            user_1.User.findById(doc[i].userId, (err, userObject) => {
-                if (err)
-                    return err;
-                else {
-                    // console.log(userObject)
-                    let feedData = {
-                        _id: doc[i]._id,
-                        date: doc[i].date,
-                        displayName: userObject.displayName,
-                        displayPicture: userObject.displayPicture,
-                        tweet: doc[i].tweet,
-                        userName: userObject.userName,
-                        uuid: doc[i].uuid,
-                    };
-                    userFeed.push(feedData);
-                    function containsObject(obj, list) {
-                        let isValidd = false;
-                        list.forEach((element) => {
-                            if (element.uuid === obj.uuid) {
-                                isValidd = true;
-                            }
-                        });
-                        return isValidd;
-                    }
-                    const objExists = containsObject(feedData, userFeed);
-                    console.log(objExists);
-                    if (objExists === false)
-                        return userFeed.push(feedData);
-                    else {
-                        console.log('object exists');
-                    }
-                }
-            });
+    user_1.Feed.find({}, (err, doc) => {
+        if (err)
+            return err;
+        else {
+            // console.log(doc.reverse())
+            res.json(doc);
         }
-        res.json(userFeed);
     });
 }))
-    // res.json({data: feedData})
     .post((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.body);
-    user_1.User.findOneAndUpdate({ _id: req.body.userId }, { $push: { tweets: req.body } }, { $upsert: true, }, ((err, doc) => {
+    user_1.User.findOneAndUpdate({ _id: req.body.user }, { $push: { tweets: req.body } }, { $upsert: true, }, ((err, doc) => {
         if (err)
             return console.log(err);
         else {
             console.log('user tweets updated');
         }
     }));
-    user_1.Feed.create({
-        userId: req.body.userId,
-        tweet: req.body.tweet,
-        uuid: req.body.uuid,
-        date: req.body.date
-    }, (err, doc) => {
+    user_1.User.findById(req.body.user, (err, doc) => {
         if (err)
             return err;
         else {
-            console.log("feed updated");
+            user_1.Feed.create({
+                user: req.body.user,
+                userName: doc.userName,
+                displayName: doc.displayName,
+                displayPicture: doc.displayPicture,
+                tweet: req.body.tweet,
+                uuid: req.body.uuid,
+                date: req.body.date
+            }, (err, doc) => {
+                if (err)
+                    return err;
+                else {
+                    console.log("Feeeeeeed updated");
+                }
+            });
         }
     });
 }));

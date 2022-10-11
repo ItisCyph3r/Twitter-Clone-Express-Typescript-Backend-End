@@ -29,7 +29,7 @@ try {
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-app.use(cors({ origin: "http://localhost:3000", credentials: true}));
+// app.use(cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(
     session({
         secret: "secretcode",
@@ -56,8 +56,8 @@ passport.deserializeUser((id: string, done: any) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:4000/auth/google/callback",
-    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+    callbackURL: "/auth/google/callback",
+    // userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 },
 function (_: any, __: any, profile: any, cb: any) {  
 
@@ -71,7 +71,8 @@ function (_: any, __: any, profile: any, cb: any) {
                     displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
                     userName: profile.displayName,
                     googleId: profile.id,
-                    displayPicture: profile.photos[0].value
+                    displayPicture: profile.photos[0].value,
+                    isVerified: false
                 }, (err, user) => {
                     return cb(err, user)
                 })
@@ -87,7 +88,7 @@ function (_: any, __: any, profile: any, cb: any) {
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "http://localhost:4000/auth/github/callback"
+    callbackURL: "/auth/github/callback"
     },
     function (_: any, __: any, profile: any, cb: any) {
         User.findOne({ githubId: profile.id }, async function (err: Error, doc: IMongoDBUser){
@@ -100,7 +101,8 @@ passport.use(new GitHubStrategy({
                         displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
                         userName: profile.displayName,
                         githubId: profile.id,
-                        displayPicture: profile.photos[0].value
+                        displayPicture: profile.photos[0].value,
+                        isVerified: false
                     }, (err, user) => {
                         return cb(err, user)
                     })
@@ -159,60 +161,18 @@ app
 .route('/api')
 .get(async (req, res) => {
 
-    Feed.find({})
-    .then((doc) => {
-        for (let i = 0; i < doc.length; i++) {
-            User.findById(doc[i].userId, (err: Error, userObject: any) => {
-                if(err) return err
-                    
-                else{    
-                    // console.log(userObject)
-                    let feedData = {
-                        _id: doc[i]._id,
-                        date: doc[i].date,
-                        displayName: userObject.displayName, 
-                        displayPicture: userObject.displayPicture, 
-                        tweet: doc[i].tweet,
-                        userName: userObject.userName,
-                        uuid: doc[i].uuid,
-                    };  
-
-                    userFeed.push(feedData)
-
-                    function containsObject(obj: any, list: any) {
-                        let isValidd: boolean = false;
-                        list.forEach((element: any) => {
-                            if (element.uuid === obj.uuid) {
-                                isValidd = true;
-                            }
-                        });
-                        return isValidd;
-                    }
-                    
-                    const objExists = containsObject(feedData, userFeed)
-
-                    console.log(objExists)
-
-                    if(objExists === false) return userFeed.push(feedData)
-
-                    else {console.log('object exists')}
-                }
-            })  
+    Feed.find({}, (err: Error, doc: any) => {
+        if (err) return err;
+        else{ 
+            // console.log(doc.reverse())
+            res.json(doc)
         }
-        res.json(userFeed)
     })
 })
 
-
-// res.json({data: feedData})
-
-
-.post( async (req, res) => {
-    console.log(req.body)
-    
-
+.post( async (req, res) => {  
     User.findOneAndUpdate(
-        { _id: req.body.userId }, 
+        { _id: req.body.user }, 
         { $push: { tweets: req.body } },
         {$upsert: true,},
         ((err: mongoose.CallbackError, doc: any) => {
@@ -223,19 +183,24 @@ app
         })
     )
 
-    Feed.create({
-        userId: req.body.userId,
-        tweet: req.body.tweet,
-        uuid: req.body.uuid,
-        date: req.body.date
-
-    }, (err: any, doc: any) => {
+    User.findById(req.body.user, (err: Error, doc: any) => {
         if (err) return err
         else {
-            console.log("feed updated")
+
+            Feed.create({
+                user: req.body.user,
+                userName: doc.userName,
+                displayName: doc.displayName, 
+                displayPicture: doc.displayPicture,
+                tweet: req.body.tweet,
+                uuid: req.body.uuid,
+                date: req.body.date
+            }, (err: any, doc: any) => {
+                if (err) return err
+                else {console.log("Feeeeeeed updated")}
+            })
         }
     })
-
     
 })
 

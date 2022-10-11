@@ -1,12 +1,35 @@
 import mongoose from "mongoose";
 
-
-const postSchema = new mongoose.Schema({
-    author: String,
-    userId: String,
-    uuid: Number,
-    tweet: String,
-    date: String,
+const feedSchema = new mongoose.Schema({
+    user: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User',
+        required: true
+    },
+    userName: {
+        type: String,
+        required: true
+    },
+    displayName: {
+        type: String,
+        required: true
+    },
+    displayPicture: {
+        type: String,
+        required: true
+    },
+    uuid: {
+        type: Number,
+        required: true
+    },
+    tweet: {
+        type: String,
+        required: true
+    },
+    date: {
+        type: String,
+        required: true
+    },
 })
 
 const userSchema = new mongoose.Schema({
@@ -30,10 +53,15 @@ const userSchema = new mongoose.Schema({
         required: false,
         type: String
     },
+    isVerified: {
+        required: false,
+        type: Boolean
+    },  
     tweets: []
+    // tweets: []
     // tweets: [postSchema]
 }, {timestamps: true})
 
 
-export const Feed = mongoose.model('feed', postSchema);
+export const Feed = mongoose.model('feed', feedSchema);
 export const User = mongoose.model('user', userSchema);
