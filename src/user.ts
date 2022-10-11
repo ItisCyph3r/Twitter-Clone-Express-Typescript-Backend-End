@@ -58,8 +58,6 @@ const userSchema = new mongoose.Schema({
         type: Boolean
     },  
     tweets: []
-    // tweets: []
-    // tweets: [postSchema]
 }, {timestamps: true})
 
 

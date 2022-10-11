@@ -62,8 +62,6 @@ const userSchema = new mongoose_1.default.Schema({
         type: Boolean
     },
     tweets: []
-    // tweets: []
-    // tweets: [postSchema]
 }, { timestamps: true });
 exports.Feed = mongoose_1.default.model('feed', feedSchema);
 exports.User = mongoose_1.default.model('user', userSchema);
