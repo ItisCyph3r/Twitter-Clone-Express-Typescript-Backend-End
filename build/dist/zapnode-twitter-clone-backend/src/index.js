@@ -35,19 +35,13 @@ catch (error) {
     throw error;
 }
 // middleware
-app.set("trust proxy", 1);
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
 app.use((0, cors_1.default)({ origin: "http://localhost:3000", credentials: true }));
 app.use((0, express_session_1.default)({
     secret: "secretcode",
     resave: true,
-    saveUninitialized: true,
-    cookie: {
-        sameSite: "none",
-        secure: true,
-        maxAge: 1000 * 60 * 60 * 24
-    }
+    saveUninitialized: true
 }));
 app.use(passport_1.default.initialize());
 app.use(passport_1.default.session());

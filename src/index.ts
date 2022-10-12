@@ -26,7 +26,7 @@ try {
 
 
 // middleware
-
+app.set("trust proxy", 1);
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(cors({ origin: "http://localhost:3000", credentials: true}));
@@ -34,7 +34,12 @@ app.use(
     session({
         secret: "secretcode",
         resave: true,
-        saveUninitialized: true
+        saveUninitialized: true,
+        cookie: {
+            sameSite: "none",
+            secure: true,
+            maxAge: 1000 * 60 * 60 * 24
+        }
     })
 );
 app.use(passport.initialize());
