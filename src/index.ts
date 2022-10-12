@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express } from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
@@ -6,7 +6,7 @@ import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import { Feed, User } from './user';
-import { IMongoDBUser, IUser } from './types';
+import { IMongoDBUser } from './types';
 const GoogleStrategy = require('passport-google-oauth20');
 const GitHubStrategy = require('passport-github').Strategy;
 let userFeed: any[] = [];
@@ -29,7 +29,7 @@ try {
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-// app.use(cors({ origin: "http://localhost:3000", credentials: true}));
+app.use(cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(
     session({
         secret: "secretcode",

@@ -16,6 +16,7 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const body_parser_1 = __importDefault(require("body-parser"));
+const cors_1 = __importDefault(require("cors"));
 const express_session_1 = __importDefault(require("express-session"));
 const passport_1 = __importDefault(require("passport"));
 const user_1 = require("./user");
@@ -36,7 +37,7 @@ catch (error) {
 // middleware
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
-// app.use(cors({ origin: "http://localhost:3000", credentials: true}));
+app.use((0, cors_1.default)({ origin: "http://localhost:3000", credentials: true }));
 app.use((0, express_session_1.default)({
     secret: "secretcode",
     resave: true,
