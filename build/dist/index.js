@@ -38,7 +38,7 @@ catch (error) {
 app.set("trust proxy", 1);
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
-app.use((0, cors_1.default)({ origin: "http://localhost:3000", credentials: true }));
+app.use((0, cors_1.default)({ origin: "https://kaleidoscopic-baklava-9340ea.netlify.app", credentials: true }));
 app.use((0, express_session_1.default)({
     secret: "secretcode",
     resave: true,
@@ -63,7 +63,6 @@ passport_1.default.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "/auth/google/callback",
-    // userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 }, function (_, __, profile, cb) {
     user_1.User.findOne({ googleId: profile.id }, function (err, doc) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -122,19 +121,17 @@ app.get('/auth/google/callback',
 passport_1.default.authenticate('google', {
     failureMessage: true
 }), function (req, res) {
-    res.redirect('http://localhost:3000/home');
+    res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
 });
 app
     .route('/auth/github')
     .get(passport_1.default.authenticate('github', {
     scope: ['profile']
 }));
-app.get('/auth/github/callback', 
-// passport.authenticate('github', { failureRedirect: '/login',
-passport_1.default.authenticate('github', {
+app.get('/auth/github/callback', passport_1.default.authenticate('github', {
     failureMessage: true
 }), function (req, res) {
-    res.redirect('http://localhost:3000/home');
+    res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
 });
 app
     .route('/getuser')
@@ -218,5 +215,6 @@ app
     }
 });
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {
-    console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
+    // console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
+    console.log('Server is Live!!!');
 });

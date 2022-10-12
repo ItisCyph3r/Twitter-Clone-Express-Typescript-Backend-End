@@ -29,7 +29,7 @@ try {
 app.set("trust proxy", 1);
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-app.use(cors({ origin: "http://localhost:3000", credentials: true}));
+app.use(cors({ origin: "https://kaleidoscopic-baklava-9340ea.netlify.app", credentials: true}));
 app.use(
     session({
         secret: "secretcode",
@@ -62,7 +62,6 @@ passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "/auth/google/callback",
-    // userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 },
 function (_: any, __: any, profile: any, cb: any) {  
 
@@ -129,7 +128,7 @@ app.get('/auth/google/callback',
         failureMessage: true
     }),
     function (req, res) {
-        res.redirect('http://localhost:3000/home');
+        res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
     });
 
 app
@@ -139,12 +138,11 @@ app
     }));
 
 app.get('/auth/github/callback',
-    // passport.authenticate('github', { failureRedirect: '/login',
     passport.authenticate('github', {
         failureMessage: true
     }),
     function (req, res) {
-        res.redirect('http://localhost:3000/home');
+        res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
     });
 
     app
@@ -240,5 +238,6 @@ app
 
 
 app.listen(Number(process.env.YOUR_PORT) || process.env.PORT || port, host, () => {
-    console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
+    // console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
+    console.log('Server is Live!!!')
 })
