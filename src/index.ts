@@ -30,6 +30,7 @@ app.set("trust proxy", 1);
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(cors({ origin: "https://kaleidoscopic-baklava-9340ea.netlify.app", credentials: true}));
+// app.use(cors({ origin: "http://localhost:3000", credentials: true}));
 app.use(
     session({
         secret: "secretcode",
@@ -129,6 +130,8 @@ app.get('/auth/google/callback',
     }),
     function (req, res) {
         res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
+        // res.redirect('http://localhost:3000/home');
+        
     });
 
 app
@@ -143,6 +146,7 @@ app.get('/auth/github/callback',
     }),
     function (req, res) {
         res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
+        // res.redirect('http://localhost:3000/home');
     });
 
     app
