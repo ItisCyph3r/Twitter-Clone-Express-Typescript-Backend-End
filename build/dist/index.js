@@ -38,17 +38,17 @@ catch (error) {
 app.set("trust proxy", 1);
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
-// app.use(cors({ origin: "https://kaleidoscopic-baklava-9340ea.netlify.app", credentials: true}));
-app.use((0, cors_1.default)({ origin: "http://localhost:3000", credentials: true }));
+app.use((0, cors_1.default)({ origin: "https://kaleidoscopic-baklava-9340ea.netlify.app", credentials: true }));
+// app.use(cors({ origin: "http://localhost:3000", credentials: true}));
 app.use((0, express_session_1.default)({
     secret: "secretcode",
     resave: true,
     saveUninitialized: true,
-    // cookie: {
-    //     sameSite: "none",
-    //     secure: true,
-    //     maxAge: 1000 * 60 * 60 * 24
-    // }
+    cookie: {
+        sameSite: "none",
+        secure: true,
+        maxAge: 1000 * 60 * 60 * 24
+    }
 }));
 app.use(passport_1.default.initialize());
 app.use(passport_1.default.session());
@@ -122,8 +122,8 @@ app.get('/auth/google/callback',
 passport_1.default.authenticate('google', {
     failureMessage: true
 }), function (req, res) {
-    // res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
-    res.redirect('http://localhost:3000/home');
+    res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
+    // res.redirect('http://localhost:3000/home');
 });
 app
     .route('/auth/github')
@@ -133,8 +133,8 @@ app
 app.get('/auth/github/callback', passport_1.default.authenticate('github', {
     failureMessage: true
 }), function (req, res) {
-    // res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
-    res.redirect('http://localhost:3000/home');
+    res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
+    // res.redirect('http://localhost:3000/home');
 });
 app
     .route('/getuser')
