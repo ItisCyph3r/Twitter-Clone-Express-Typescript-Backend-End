@@ -72,9 +72,11 @@ passport_1.default.use(new GoogleStrategy({
                     return cb(err, doc);
                 }
                 else {
+                    const formattedName = profile.displayName.split(' ').join('_');
+                    console.log(formattedName);
                     user_1.User.create({
-                        displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
-                        userName: profile.displayName,
+                        displayName: formattedName + Math.floor(1000 + Math.random() * 9000),
+                        userName: formattedName,
                         googleId: profile.id,
                         displayPicture: profile.photos[0].value,
                         isVerified: false
@@ -98,9 +100,11 @@ passport_1.default.use(new GitHubStrategy({
                     return cb(err, doc);
                 }
                 else {
+                    const formattedName = profile.displayName.split(' ').join('_');
+                    console.log(formattedName);
                     user_1.User.create({
-                        displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
-                        userName: profile.displayName,
+                        displayName: formattedName + Math.floor(1000 + Math.random() * 9000),
+                        userName: formattedName,
                         githubId: profile.id,
                         displayPicture: profile.photos[0].value,
                         isVerified: false

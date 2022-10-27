@@ -72,9 +72,11 @@ passport.use(new GoogleStrategy({
                 if (doc) {
                     return cb(err, doc)
                 } else {
+                    const formattedName = profile.displayName.split(' ').join('_')
+                    console.log(formattedName)
                     User.create({
-                        displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
-                        userName: profile.displayName,
+                        displayName: formattedName + Math.floor(1000 + Math.random() * 9000),
+                        userName: formattedName,
                         googleId: profile.id,
                         displayPicture: profile.photos[0].value,
                         isVerified: false
@@ -102,9 +104,11 @@ passport.use(new GitHubStrategy({
                 if (doc) {
                     return cb(err, doc)
                 } else {
+                    const formattedName = profile.displayName.split(' ').join('_')
+                    console.log(formattedName)
                     User.create({
-                        displayName: profile.displayName + Math.floor(1000 + Math.random() * 9000),
-                        userName: profile.displayName,
+                        displayName: formattedName + Math.floor(1000 + Math.random() * 9000),
+                        userName: formattedName,
                         githubId: profile.id,
                         displayPicture: profile.photos[0].value,
                         isVerified: false
