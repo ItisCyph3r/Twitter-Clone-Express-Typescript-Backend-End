@@ -29,7 +29,7 @@ try {
 app.set("trust proxy", 1);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors({ origin: "https://kaleidoscopic-baklava-9340ea.netlify.app", credentials: true }));
+app.use(cors({ origin: "https://zap-twitter-clone.netlify.app", credentials: true }));
 // app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(
     session({
@@ -133,7 +133,7 @@ app.get('/auth/google/callback',
         failureMessage: true
     }),
     function (req, res) {
-        res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
+        res.redirect('https://zap-twitter-clone.netlify.app/home');
         // res.redirect('http://localhost:3000/home');
 
     });
@@ -149,7 +149,7 @@ app.get('/auth/github/callback',
         failureMessage: true
     }),
     function (req, res) {
-        res.redirect('https://kaleidoscopic-baklava-9340ea.netlify.app/home');
+        res.redirect('https://zap-twitter-clone.netlify.app/home');
         // res.redirect('http://localhost:3000/home');
     });
 
