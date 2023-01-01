@@ -20,7 +20,7 @@ const port = process.env.PORT;
 try {
     mongoose.connect(process.env.USER_SECRET, () => { console.log('Connected to Mongoose successfull') })
 } catch (error: any) {
-    throw errorsssssss
+    throw error
 }
 
 
