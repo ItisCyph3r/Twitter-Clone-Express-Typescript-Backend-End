@@ -46,7 +46,7 @@ app.use(passport.session());
 
 
 passport.serializeUser((user: IMongoDBUser, done: any) => {
-    return done(null, user._id);
+    return done(null, user._id);dasd
 })
 
 passport.deserializeUser((id: string, done: any) => {
